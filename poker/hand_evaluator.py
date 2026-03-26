@@ -9,6 +9,7 @@ class HandRank(IntEnum):
     ONE_PAIR = 2
     TWO_PAIR = 3
     THREE_OF_A_KIND = 4
+    STRAIGHT = 5
 
 
 class HandResult:
@@ -57,6 +58,11 @@ class HandEvaluator:
 
         # Compter les occurrences de chaque valeur
         value_counts = HandEvaluator._count_values(cards)
+
+        # Vérifier Straight (doit être vérifié avant les combinaisons avec paires)
+        straight_result = HandEvaluator._check_straight(sorted_cards)
+        if straight_result:
+            return straight_result
 
         # Vérifier Three of a Kind (doit être vérifié avant Two Pair et One Pair)
         three_of_a_kind_result = HandEvaluator._check_three_of_a_kind(sorted_cards, value_counts)
@@ -198,6 +204,45 @@ class HandEvaluator:
                 rank=HandRank.THREE_OF_A_KIND,
                 cards=result_cards,
                 rank_name="Three of a Kind"
+            )
+
+        return None
+
+    @staticmethod
+    def _check_straight(sorted_cards: List[Card]) -> HandResult | None:
+        """
+        Vérifie si la main contient une suite
+
+        Args:
+            sorted_cards: Cartes triées par valeur décroissante
+
+        Returns:
+            HandResult si une suite est trouvée, None sinon
+        """
+        # Extraire les valeurs numériques
+        values = [Card.VALUE_ORDER[card.value] for card in sorted_cards]
+
+        # Vérifier si c'est une suite normale (chaque carte = précédente - 1)
+        is_straight = all(values[i] == values[i + 1] + 1 for i in range(len(values) - 1))
+
+        if is_straight:
+            # Suite normale, cartes déjà triées par ordre décroissant
+            return HandResult(
+                rank=HandRank.STRAIGHT,
+                cards=sorted_cards,
+                rank_name="Straight"
+            )
+
+        # Vérifier la wheel (A-2-3-4-5)
+        # Les valeurs doivent être [14, 5, 4, 3, 2] (A en premier car trié par ordre décroissant)
+        if values == [14, 5, 4, 3, 2]:
+            # Dans la wheel, le 5 est la carte haute, donc réorganiser les cartes
+            # 5-4-3-2-A
+            wheel_cards = sorted_cards[1:] + [sorted_cards[0]]
+            return HandResult(
+                rank=HandRank.STRAIGHT,
+                cards=wheel_cards,
+                rank_name="Straight"
             )
 
         return None
