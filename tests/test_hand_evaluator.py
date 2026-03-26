@@ -346,3 +346,87 @@ class TestStraight:
         result = HandEvaluator.evaluate(cards)
         assert result.rank != HandRank.STRAIGHT
         assert result.rank == HandRank.ONE_PAIR
+
+
+class TestFlush:
+    """Tests pour la détection de Flush"""
+
+    def test_flush_detection(self):
+        """Test détection d'une couleur (flush)"""
+        cards = [
+            Card('A', '♠'),
+            Card('J', '♠'),
+            Card('8', '♠'),
+            Card('5', '♠'),
+            Card('3', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.FLUSH
+        assert result.rank_name == "Flush"
+
+    def test_flush_with_hearts(self):
+        """Test flush avec cœurs"""
+        cards = [
+            Card('K', '♥'),
+            Card('Q', '♥'),
+            Card('9', '♥'),
+            Card('6', '♥'),
+            Card('2', '♥')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.FLUSH
+
+    def test_flush_with_diamonds(self):
+        """Test flush avec carreaux"""
+        cards = [
+            Card('10', '♦'),
+            Card('8', '♦'),
+            Card('7', '♦'),
+            Card('4', '♦'),
+            Card('3', '♦')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.FLUSH
+
+    def test_flush_with_clubs(self):
+        """Test flush avec trèfles"""
+        cards = [
+            Card('J', '♣'),
+            Card('9', '♣'),
+            Card('7', '♣'),
+            Card('5', '♣'),
+            Card('2', '♣')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.FLUSH
+
+    def test_flush_cards_sorted_by_value(self):
+        """Test que les cartes du flush sont triées par valeur décroissante"""
+        cards = [
+            Card('3', '♠'),
+            Card('A', '♠'),
+            Card('5', '♠'),
+            Card('J', '♠'),
+            Card('8', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.FLUSH
+        # Les cartes devraient être triées: A, J, 8, 5, 3
+        assert result.cards[0].value == 'A'
+        assert result.cards[1].value == 'J'
+        assert result.cards[2].value == '8'
+        assert result.cards[3].value == '5'
+        assert result.cards[4].value == '3'
+
+    def test_not_flush_when_different_suits(self):
+        """Test qu'une main avec couleurs différentes n'est pas un flush"""
+        cards = [
+            Card('A', '♠'),
+            Card('K', '♠'),
+            Card('Q', '♠'),
+            Card('J', '♠'),
+            Card('9', '♥')  # Une carte d'une couleur différente
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank != HandRank.FLUSH
+        assert result.rank == HandRank.HIGH_CARD

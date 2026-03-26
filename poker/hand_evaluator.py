@@ -10,6 +10,7 @@ class HandRank(IntEnum):
     TWO_PAIR = 3
     THREE_OF_A_KIND = 4
     STRAIGHT = 5
+    FLUSH = 6
 
 
 class HandResult:
@@ -58,6 +59,11 @@ class HandEvaluator:
 
         # Compter les occurrences de chaque valeur
         value_counts = HandEvaluator._count_values(cards)
+
+        # Vérifier Flush (doit être vérifié avant Straight car Flush > Straight)
+        flush_result = HandEvaluator._check_flush(sorted_cards)
+        if flush_result:
+            return flush_result
 
         # Vérifier Straight (doit être vérifié avant les combinaisons avec paires)
         straight_result = HandEvaluator._check_straight(sorted_cards)
@@ -243,6 +249,31 @@ class HandEvaluator:
                 rank=HandRank.STRAIGHT,
                 cards=wheel_cards,
                 rank_name="Straight"
+            )
+
+        return None
+
+    @staticmethod
+    def _check_flush(sorted_cards: List[Card]) -> HandResult | None:
+        """
+        Vérifie si la main contient un flush (5 cartes de même couleur)
+
+        Args:
+            sorted_cards: Cartes triées par valeur décroissante
+
+        Returns:
+            HandResult si un flush est trouvé, None sinon
+        """
+        # Vérifier si toutes les cartes ont la même couleur
+        first_suit = sorted_cards[0].suit
+        is_flush = all(card.suit == first_suit for card in sorted_cards)
+
+        if is_flush:
+            # Les cartes sont déjà triées par valeur décroissante
+            return HandResult(
+                rank=HandRank.FLUSH,
+                cards=sorted_cards,
+                rank_name="Flush"
             )
 
         return None
