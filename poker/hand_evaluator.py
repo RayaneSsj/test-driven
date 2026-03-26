@@ -13,6 +13,7 @@ class HandRank(IntEnum):
     FLUSH = 6
     FULL_HOUSE = 7
     FOUR_OF_A_KIND = 8
+    STRAIGHT_FLUSH = 9
 
 
 class HandResult:
@@ -61,6 +62,11 @@ class HandEvaluator:
 
         # Compter les occurrences de chaque valeur
         value_counts = HandEvaluator._count_values(cards)
+
+        # Vérifier Straight Flush (doit être la première vérification car c'est la meilleure main)
+        straight_flush_result = HandEvaluator._check_straight_flush(sorted_cards)
+        if straight_flush_result:
+            return straight_flush_result
 
         # Vérifier Four of a Kind (doit être vérifié avant Full House)
         four_of_a_kind_result = HandEvaluator._check_four_of_a_kind(sorted_cards, value_counts)
@@ -356,6 +362,50 @@ class HandEvaluator:
                 rank=HandRank.FOUR_OF_A_KIND,
                 cards=result_cards,
                 rank_name="Four of a Kind"
+            )
+
+        return None
+
+    @staticmethod
+    def _check_straight_flush(sorted_cards: List[Card]) -> HandResult | None:
+        """
+        Vérifie si la main contient une quinte flush (suite de même couleur)
+
+        Args:
+            sorted_cards: Cartes triées par valeur décroissante
+
+        Returns:
+            HandResult si une quinte flush est trouvée, None sinon
+        """
+        # Vérifier d'abord si toutes les cartes sont de la même couleur (flush)
+        first_suit = sorted_cards[0].suit
+        is_flush = all(card.suit == first_suit for card in sorted_cards)
+
+        if not is_flush:
+            return None
+
+        # Si c'est un flush, vérifier si c'est aussi une suite
+        values = [Card.VALUE_ORDER[card.value] for card in sorted_cards]
+
+        # Vérifier si c'est une suite normale (chaque carte = précédente - 1)
+        is_straight = all(values[i] == values[i + 1] + 1 for i in range(len(values) - 1))
+
+        if is_straight:
+            # Suite flush normale, cartes déjà triées par ordre décroissant
+            return HandResult(
+                rank=HandRank.STRAIGHT_FLUSH,
+                cards=sorted_cards,
+                rank_name="Straight Flush"
+            )
+
+        # Vérifier la wheel (A-2-3-4-5)
+        if values == [14, 5, 4, 3, 2]:
+            # Dans la wheel, le 5 est la carte haute, donc réorganiser les cartes
+            wheel_cards = sorted_cards[1:] + [sorted_cards[0]]
+            return HandResult(
+                rank=HandRank.STRAIGHT_FLUSH,
+                cards=wheel_cards,
+                rank_name="Straight Flush"
             )
 
         return None

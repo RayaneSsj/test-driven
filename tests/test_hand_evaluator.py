@@ -582,3 +582,88 @@ class TestFourOfAKind:
         result = HandEvaluator.evaluate(cards)
         assert result.rank != HandRank.FOUR_OF_A_KIND
         assert result.rank == HandRank.FULL_HOUSE
+
+
+class TestStraightFlush:
+    """Tests pour la détection de Straight Flush"""
+
+    def test_straight_flush_detection(self):
+        """Test détection d'une quinte flush"""
+        cards = [
+            Card('9', '♠'),
+            Card('8', '♠'),
+            Card('7', '♠'),
+            Card('6', '♠'),
+            Card('5', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.STRAIGHT_FLUSH
+        assert result.rank_name == "Straight Flush"
+
+    def test_royal_flush_detection(self):
+        """Test détection d'une quinte flush royale (10-J-Q-K-A)"""
+        cards = [
+            Card('A', '♥'),
+            Card('K', '♥'),
+            Card('Q', '♥'),
+            Card('J', '♥'),
+            Card('10', '♥')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.STRAIGHT_FLUSH
+        # La Royal Flush est une Straight Flush, pas un rank séparé
+        assert result.rank_name == "Straight Flush"
+        # L'As devrait être la carte la plus haute
+        assert result.cards[0].value == 'A'
+
+    def test_straight_flush_low_ace(self):
+        """Test quinte flush avec As bas (A-2-3-4-5 wheel)"""
+        cards = [
+            Card('A', '♦'),
+            Card('2', '♦'),
+            Card('3', '♦'),
+            Card('4', '♦'),
+            Card('5', '♦')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.STRAIGHT_FLUSH
+        # Dans la wheel, le 5 est la carte haute
+        assert result.cards[0].value == '5'
+
+    def test_straight_flush_middle_values(self):
+        """Test quinte flush avec valeurs moyennes"""
+        cards = [
+            Card('7', '♣'),
+            Card('6', '♣'),
+            Card('5', '♣'),
+            Card('4', '♣'),
+            Card('3', '♣')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.STRAIGHT_FLUSH
+
+    def test_not_straight_flush_when_flush_only(self):
+        """Test qu'un flush sans suite n'est pas une quinte flush"""
+        cards = [
+            Card('A', '♠'),
+            Card('J', '♠'),
+            Card('8', '♠'),
+            Card('5', '♠'),
+            Card('3', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank != HandRank.STRAIGHT_FLUSH
+        assert result.rank == HandRank.FLUSH
+
+    def test_not_straight_flush_when_straight_only(self):
+        """Test qu'une suite sans flush n'est pas une quinte flush"""
+        cards = [
+            Card('9', '♠'),
+            Card('8', '♥'),
+            Card('7', '♦'),
+            Card('6', '♣'),
+            Card('5', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank != HandRank.STRAIGHT_FLUSH
+        assert result.rank == HandRank.STRAIGHT
