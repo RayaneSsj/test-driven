@@ -11,6 +11,7 @@ class HandRank(IntEnum):
     THREE_OF_A_KIND = 4
     STRAIGHT = 5
     FLUSH = 6
+    FULL_HOUSE = 7
 
 
 class HandResult:
@@ -59,6 +60,11 @@ class HandEvaluator:
 
         # Compter les occurrences de chaque valeur
         value_counts = HandEvaluator._count_values(cards)
+
+        # Vérifier Full House (doit être vérifié avant Flush car Full House > Flush)
+        full_house_result = HandEvaluator._check_full_house(sorted_cards, value_counts)
+        if full_house_result:
+            return full_house_result
 
         # Vérifier Flush (doit être vérifié avant Straight car Flush > Straight)
         flush_result = HandEvaluator._check_flush(sorted_cards)
@@ -274,6 +280,42 @@ class HandEvaluator:
                 rank=HandRank.FLUSH,
                 cards=sorted_cards,
                 rank_name="Flush"
+            )
+
+        return None
+
+    @staticmethod
+    def _check_full_house(sorted_cards: List[Card], value_counts: dict) -> HandResult | None:
+        """
+        Vérifie si la main contient un full house (brelan + paire)
+
+        Args:
+            sorted_cards: Cartes triées par valeur décroissante
+            value_counts: Dictionnaire des occurrences de chaque valeur
+
+        Returns:
+            HandResult si un full house est trouvé, None sinon
+        """
+        # Trouver les brelans et les paires
+        trips = [value for value, count in value_counts.items() if count == 3]
+        pairs = [value for value, count in value_counts.items() if count == 2]
+
+        # Full house = 1 brelan + 1 paire
+        if len(trips) == 1 and len(pairs) == 1:
+            trips_value = trips[0]
+            pair_value = pairs[0]
+
+            # Séparer les cartes du brelan et de la paire
+            trips_cards = [card for card in sorted_cards if card.value == trips_value]
+            pair_cards = [card for card in sorted_cards if card.value == pair_value]
+
+            # Organiser les cartes : brelan en premier, puis paire
+            result_cards = trips_cards + pair_cards
+
+            return HandResult(
+                rank=HandRank.FULL_HOUSE,
+                cards=result_cards,
+                rank_name="Full House"
             )
 
         return None

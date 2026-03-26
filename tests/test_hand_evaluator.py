@@ -430,3 +430,80 @@ class TestFlush:
         result = HandEvaluator.evaluate(cards)
         assert result.rank != HandRank.FLUSH
         assert result.rank == HandRank.HIGH_CARD
+
+
+class TestFullHouse:
+    """Tests pour la détection de Full House"""
+
+    def test_full_house_detection(self):
+        """Test détection d'un full house (brelan + paire)"""
+        cards = [
+            Card('A', '♠'),
+            Card('A', '♥'),
+            Card('A', '♦'),
+            Card('K', '♣'),
+            Card('K', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.FULL_HOUSE
+        assert result.rank_name == "Full House"
+
+    def test_full_house_with_low_trips(self):
+        """Test full house avec brelan de cartes basses"""
+        cards = [
+            Card('3', '♠'),
+            Card('3', '♥'),
+            Card('3', '♦'),
+            Card('Q', '♣'),
+            Card('Q', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.FULL_HOUSE
+
+    def test_full_house_identifies_trips_and_pair(self):
+        """Test que le brelan et la paire sont identifiés correctement"""
+        cards = [
+            Card('J', '♠'),
+            Card('J', '♥'),
+            Card('J', '♦'),
+            Card('7', '♣'),
+            Card('7', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.FULL_HOUSE
+        # Les trois premières cartes devraient être le brelan
+        assert result.cards[0].value == 'J'
+        assert result.cards[1].value == 'J'
+        assert result.cards[2].value == 'J'
+        # Les deux suivantes devraient être la paire
+        assert result.cards[3].value == '7'
+        assert result.cards[4].value == '7'
+
+    def test_full_house_trips_over_pair(self):
+        """Test full house avec brelan plus faible que la paire"""
+        cards = [
+            Card('5', '♠'),
+            Card('5', '♥'),
+            Card('5', '♦'),
+            Card('K', '♣'),
+            Card('K', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.FULL_HOUSE
+        # Le brelan devrait être en premier (5)
+        assert result.cards[0].value == '5'
+        assert result.cards[1].value == '5'
+        assert result.cards[2].value == '5'
+
+    def test_not_full_house_when_three_of_a_kind(self):
+        """Test qu'un brelan simple n'est pas un full"""
+        cards = [
+            Card('K', '♠'),
+            Card('K', '♥'),
+            Card('K', '♦'),
+            Card('Q', '♣'),
+            Card('9', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank != HandRank.FULL_HOUSE
+        assert result.rank == HandRank.THREE_OF_A_KIND
