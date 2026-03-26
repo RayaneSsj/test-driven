@@ -507,3 +507,78 @@ class TestFullHouse:
         result = HandEvaluator.evaluate(cards)
         assert result.rank != HandRank.FULL_HOUSE
         assert result.rank == HandRank.THREE_OF_A_KIND
+
+
+class TestFourOfAKind:
+    """Tests pour la détection de Four of a Kind"""
+
+    def test_four_of_a_kind_detection(self):
+        """Test détection d'un carré"""
+        cards = [
+            Card('A', '♠'),
+            Card('A', '♥'),
+            Card('A', '♦'),
+            Card('A', '♣'),
+            Card('K', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.FOUR_OF_A_KIND
+        assert result.rank_name == "Four of a Kind"
+
+    def test_four_of_a_kind_with_low_quads(self):
+        """Test carré avec des cartes basses"""
+        cards = [
+            Card('3', '♠'),
+            Card('3', '♥'),
+            Card('3', '♦'),
+            Card('3', '♣'),
+            Card('Q', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.FOUR_OF_A_KIND
+
+    def test_four_of_a_kind_identifies_quads(self):
+        """Test que le carré est identifié correctement"""
+        cards = [
+            Card('J', '♠'),
+            Card('J', '♥'),
+            Card('J', '♦'),
+            Card('J', '♣'),
+            Card('7', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.FOUR_OF_A_KIND
+        # Les quatre premières cartes devraient être le carré
+        assert result.cards[0].value == 'J'
+        assert result.cards[1].value == 'J'
+        assert result.cards[2].value == 'J'
+        assert result.cards[3].value == 'J'
+        # La dernière devrait être le kicker
+        assert result.cards[4].value == '7'
+
+    def test_four_of_a_kind_with_high_kicker(self):
+        """Test carré avec kicker élevé"""
+        cards = [
+            Card('5', '♠'),
+            Card('5', '♥'),
+            Card('5', '♦'),
+            Card('5', '♣'),
+            Card('A', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.FOUR_OF_A_KIND
+        # Le kicker devrait être l'As
+        assert result.cards[4].value == 'A'
+
+    def test_not_four_of_a_kind_when_full_house(self):
+        """Test qu'un full house n'est pas un carré"""
+        cards = [
+            Card('K', '♠'),
+            Card('K', '♥'),
+            Card('K', '♦'),
+            Card('Q', '♣'),
+            Card('Q', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank != HandRank.FOUR_OF_A_KIND
+        assert result.rank == HandRank.FULL_HOUSE

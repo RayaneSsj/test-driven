@@ -12,6 +12,7 @@ class HandRank(IntEnum):
     STRAIGHT = 5
     FLUSH = 6
     FULL_HOUSE = 7
+    FOUR_OF_A_KIND = 8
 
 
 class HandResult:
@@ -60,6 +61,11 @@ class HandEvaluator:
 
         # Compter les occurrences de chaque valeur
         value_counts = HandEvaluator._count_values(cards)
+
+        # Vérifier Four of a Kind (doit être vérifié avant Full House)
+        four_of_a_kind_result = HandEvaluator._check_four_of_a_kind(sorted_cards, value_counts)
+        if four_of_a_kind_result:
+            return four_of_a_kind_result
 
         # Vérifier Full House (doit être vérifié avant Flush car Full House > Flush)
         full_house_result = HandEvaluator._check_full_house(sorted_cards, value_counts)
@@ -316,6 +322,40 @@ class HandEvaluator:
                 rank=HandRank.FULL_HOUSE,
                 cards=result_cards,
                 rank_name="Full House"
+            )
+
+        return None
+
+    @staticmethod
+    def _check_four_of_a_kind(sorted_cards: List[Card], value_counts: dict) -> HandResult | None:
+        """
+        Vérifie si la main contient un carré (four of a kind)
+
+        Args:
+            sorted_cards: Cartes triées par valeur décroissante
+            value_counts: Dictionnaire des occurrences de chaque valeur
+
+        Returns:
+            HandResult si un carré est trouvé, None sinon
+        """
+        # Trouver les carrés
+        quads = [value for value, count in value_counts.items() if count == 4]
+
+        # Un carré trouvé
+        if len(quads) == 1:
+            quads_value = quads[0]
+
+            # Séparer les cartes du carré et le kicker
+            quads_cards = [card for card in sorted_cards if card.value == quads_value]
+            kicker = [card for card in sorted_cards if card.value != quads_value]
+
+            # Organiser les cartes : carré en premier, puis kicker
+            result_cards = quads_cards + kicker
+
+            return HandResult(
+                rank=HandRank.FOUR_OF_A_KIND,
+                cards=result_cards,
+                rank_name="Four of a Kind"
             )
 
         return None
