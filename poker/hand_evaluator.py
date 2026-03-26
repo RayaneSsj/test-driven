@@ -36,6 +36,35 @@ class HandResult:
         cards_str = ', '.join(str(card) for card in self.cards)
         return f"HandResult({self.rank_name}, [{cards_str}])"
 
+    def __gt__(self, other: 'HandResult') -> bool:
+        """Compare deux mains (plus grand que)"""
+        if self.rank != other.rank:
+            return self.rank > other.rank
+        # Même rang: comparer carte par carte
+        for my_card, other_card in zip(self.cards, other.cards):
+            if Card.VALUE_ORDER[my_card.value] != Card.VALUE_ORDER[other_card.value]:
+                return Card.VALUE_ORDER[my_card.value] > Card.VALUE_ORDER[other_card.value]
+        return False
+
+    def __lt__(self, other: 'HandResult') -> bool:
+        """Compare deux mains (plus petit que)"""
+        return other > self
+
+    def __eq__(self, other: 'HandResult') -> bool:
+        """Égalité entre deux mains"""
+        if self.rank != other.rank:
+            return False
+        for my_card, other_card in zip(self.cards, other.cards):
+            if Card.VALUE_ORDER[my_card.value] != Card.VALUE_ORDER[other_card.value]:
+                return False
+        return True
+
+    def __ge__(self, other: 'HandResult') -> bool:
+        return self > other or self == other
+
+    def __le__(self, other: 'HandResult') -> bool:
+        return self < other or self == other
+
 
 class HandEvaluator:
     """Évaluateur de mains de poker"""
