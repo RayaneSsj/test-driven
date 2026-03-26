@@ -44,3 +44,60 @@ class TestHighCard:
         assert result.rank == HandRank.HIGH_CARD
         # La carte la plus haute devrait être la Dame
         assert result.cards[0].value == 'Q'
+
+
+class TestOnePair:
+    """Tests pour la détection de One Pair"""
+
+    def test_one_pair_detection(self):
+        """Test détection d'une paire"""
+        cards = [
+            Card('A', '♠'),
+            Card('A', '♥'),
+            Card('K', '♦'),
+            Card('8', '♣'),
+            Card('3', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.ONE_PAIR
+        assert result.rank_name == "One Pair"
+
+    def test_one_pair_with_low_pair(self):
+        """Test paire avec des cartes basses"""
+        cards = [
+            Card('K', '♠'),
+            Card('Q', '♥'),
+            Card('7', '♦'),
+            Card('5', '♣'),
+            Card('5', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.ONE_PAIR
+
+    def test_one_pair_identifies_pair_value(self):
+        """Test que la paire est identifiée correctement"""
+        cards = [
+            Card('J', '♠'),
+            Card('J', '♥'),
+            Card('9', '♦'),
+            Card('4', '♣'),
+            Card('2', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.ONE_PAIR
+        # Les deux premières cartes devraient être la paire de Valets
+        assert result.cards[0].value == 'J'
+        assert result.cards[1].value == 'J'
+
+    def test_not_one_pair_when_high_card(self):
+        """Test qu'une High Card n'est pas détectée comme paire"""
+        cards = [
+            Card('A', '♠'),
+            Card('K', '♥'),
+            Card('Q', '♦'),
+            Card('J', '♣'),
+            Card('9', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank != HandRank.ONE_PAIR
+        assert result.rank == HandRank.HIGH_CARD
