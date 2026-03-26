@@ -57,6 +57,11 @@ class HandEvaluator:
         # Compter les occurrences de chaque valeur
         value_counts = HandEvaluator._count_values(cards)
 
+        # Vérifier Two Pair (doit être vérifié avant One Pair)
+        two_pair_result = HandEvaluator._check_two_pair(sorted_cards, value_counts)
+        if two_pair_result:
+            return two_pair_result
+
         # Vérifier One Pair
         pair_result = HandEvaluator._check_one_pair(sorted_cards, value_counts)
         if pair_result:
@@ -115,6 +120,44 @@ class HandEvaluator:
                 rank=HandRank.ONE_PAIR,
                 cards=result_cards,
                 rank_name="One Pair"
+            )
+
+        return None
+
+    @staticmethod
+    def _check_two_pair(sorted_cards: List[Card], value_counts: dict) -> HandResult | None:
+        """
+        Vérifie si la main contient deux paires
+
+        Args:
+            sorted_cards: Cartes triées par valeur décroissante
+            value_counts: Dictionnaire des occurrences de chaque valeur
+
+        Returns:
+            HandResult si deux paires sont trouvées, None sinon
+        """
+        # Trouver les paires
+        pairs = [value for value, count in value_counts.items() if count == 2]
+
+        # Deux paires exactement
+        if len(pairs) == 2:
+            # Trier les paires par valeur décroissante
+            pairs_sorted = sorted(pairs, key=lambda v: Card.VALUE_ORDER[v], reverse=True)
+            high_pair_value = pairs_sorted[0]
+            low_pair_value = pairs_sorted[1]
+
+            # Séparer les cartes
+            high_pair_cards = [card for card in sorted_cards if card.value == high_pair_value]
+            low_pair_cards = [card for card in sorted_cards if card.value == low_pair_value]
+            kicker = [card for card in sorted_cards if card.value not in pairs]
+
+            # Organiser les cartes : paire haute, paire basse, puis kicker
+            result_cards = high_pair_cards + low_pair_cards + kicker
+
+            return HandResult(
+                rank=HandRank.TWO_PAIR,
+                cards=result_cards,
+                rank_name="Two Pair"
             )
 
         return None

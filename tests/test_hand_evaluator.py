@@ -101,3 +101,79 @@ class TestOnePair:
         result = HandEvaluator.evaluate(cards)
         assert result.rank != HandRank.ONE_PAIR
         assert result.rank == HandRank.HIGH_CARD
+
+
+class TestTwoPair:
+    """Tests pour la détection de Two Pair"""
+
+    def test_two_pair_detection(self):
+        """Test détection de deux paires"""
+        cards = [
+            Card('A', '♠'),
+            Card('A', '♥'),
+            Card('K', '♦'),
+            Card('K', '♣'),
+            Card('3', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.TWO_PAIR
+        assert result.rank_name == "Two Pair"
+
+    def test_two_pair_with_low_pairs(self):
+        """Test deux paires avec des cartes basses"""
+        cards = [
+            Card('9', '♠'),
+            Card('9', '♥'),
+            Card('5', '♦'),
+            Card('5', '♣'),
+            Card('2', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.TWO_PAIR
+
+    def test_two_pair_identifies_pairs_correctly(self):
+        """Test que les deux paires sont identifiées dans le bon ordre"""
+        cards = [
+            Card('J', '♠'),
+            Card('J', '♥'),
+            Card('7', '♦'),
+            Card('7', '♣'),
+            Card('4', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.TWO_PAIR
+        # Les deux premières cartes devraient être la paire la plus haute (Valets)
+        assert result.cards[0].value == 'J'
+        assert result.cards[1].value == 'J'
+        # Les deux suivantes devraient être la deuxième paire (7)
+        assert result.cards[2].value == '7'
+        assert result.cards[3].value == '7'
+        # La dernière devrait être le kicker
+        assert result.cards[4].value == '4'
+
+    def test_two_pair_with_high_kicker(self):
+        """Test deux paires avec un kicker élevé"""
+        cards = [
+            Card('8', '♠'),
+            Card('8', '♥'),
+            Card('3', '♦'),
+            Card('3', '♣'),
+            Card('A', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.TWO_PAIR
+        # La dernière carte devrait être l'As (kicker)
+        assert result.cards[4].value == 'A'
+
+    def test_not_two_pair_when_one_pair(self):
+        """Test qu'une seule paire n'est pas détectée comme deux paires"""
+        cards = [
+            Card('K', '♠'),
+            Card('K', '♥'),
+            Card('Q', '♦'),
+            Card('J', '♣'),
+            Card('9', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank != HandRank.TWO_PAIR
+        assert result.rank == HandRank.ONE_PAIR
