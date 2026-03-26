@@ -177,3 +177,76 @@ class TestTwoPair:
         result = HandEvaluator.evaluate(cards)
         assert result.rank != HandRank.TWO_PAIR
         assert result.rank == HandRank.ONE_PAIR
+
+
+class TestThreeOfAKind:
+    """Tests pour la détection de Three of a Kind"""
+
+    def test_three_of_a_kind_detection(self):
+        """Test détection d'un brelan"""
+        cards = [
+            Card('A', '♠'),
+            Card('A', '♥'),
+            Card('A', '♦'),
+            Card('K', '♣'),
+            Card('3', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.THREE_OF_A_KIND
+        assert result.rank_name == "Three of a Kind"
+
+    def test_three_of_a_kind_with_low_trips(self):
+        """Test brelan avec des cartes basses"""
+        cards = [
+            Card('5', '♠'),
+            Card('5', '♥'),
+            Card('5', '♦'),
+            Card('K', '♣'),
+            Card('Q', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.THREE_OF_A_KIND
+
+    def test_three_of_a_kind_identifies_trips_correctly(self):
+        """Test que le brelan est identifié correctement"""
+        cards = [
+            Card('J', '♠'),
+            Card('J', '♥'),
+            Card('J', '♦'),
+            Card('9', '♣'),
+            Card('4', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.THREE_OF_A_KIND
+        # Les trois premières cartes devraient être le brelan
+        assert result.cards[0].value == 'J'
+        assert result.cards[1].value == 'J'
+        assert result.cards[2].value == 'J'
+
+    def test_three_of_a_kind_kickers_sorted(self):
+        """Test que les kickers sont triés par ordre décroissant"""
+        cards = [
+            Card('8', '♠'),
+            Card('8', '♥'),
+            Card('8', '♦'),
+            Card('3', '♣'),
+            Card('A', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank == HandRank.THREE_OF_A_KIND
+        # Le kicker le plus haut devrait être l'As
+        assert result.cards[3].value == 'A'
+        assert result.cards[4].value == '3'
+
+    def test_not_three_of_a_kind_when_two_pair(self):
+        """Test qu'une double paire n'est pas détectée comme brelan"""
+        cards = [
+            Card('K', '♠'),
+            Card('K', '♥'),
+            Card('Q', '♦'),
+            Card('Q', '♣'),
+            Card('9', '♠')
+        ]
+        result = HandEvaluator.evaluate(cards)
+        assert result.rank != HandRank.THREE_OF_A_KIND
+        assert result.rank == HandRank.TWO_PAIR

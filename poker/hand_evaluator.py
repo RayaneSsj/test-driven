@@ -8,6 +8,7 @@ class HandRank(IntEnum):
     HIGH_CARD = 1
     ONE_PAIR = 2
     TWO_PAIR = 3
+    THREE_OF_A_KIND = 4
 
 
 class HandResult:
@@ -56,6 +57,11 @@ class HandEvaluator:
 
         # Compter les occurrences de chaque valeur
         value_counts = HandEvaluator._count_values(cards)
+
+        # Vérifier Three of a Kind (doit être vérifié avant Two Pair et One Pair)
+        three_of_a_kind_result = HandEvaluator._check_three_of_a_kind(sorted_cards, value_counts)
+        if three_of_a_kind_result:
+            return three_of_a_kind_result
 
         # Vérifier Two Pair (doit être vérifié avant One Pair)
         two_pair_result = HandEvaluator._check_two_pair(sorted_cards, value_counts)
@@ -158,6 +164,40 @@ class HandEvaluator:
                 rank=HandRank.TWO_PAIR,
                 cards=result_cards,
                 rank_name="Two Pair"
+            )
+
+        return None
+
+    @staticmethod
+    def _check_three_of_a_kind(sorted_cards: List[Card], value_counts: dict) -> HandResult | None:
+        """
+        Vérifie si la main contient un brelan
+
+        Args:
+            sorted_cards: Cartes triées par valeur décroissante
+            value_counts: Dictionnaire des occurrences de chaque valeur
+
+        Returns:
+            HandResult si un brelan est trouvé, None sinon
+        """
+        # Trouver les brelans
+        trips = [value for value, count in value_counts.items() if count == 3]
+
+        # Un brelan trouvé
+        if len(trips) == 1:
+            trips_value = trips[0]
+
+            # Séparer les cartes du brelan et les kickers
+            trips_cards = [card for card in sorted_cards if card.value == trips_value]
+            kickers = [card for card in sorted_cards if card.value != trips_value]
+
+            # Organiser les cartes : brelan en premier, puis kickers par ordre décroissant
+            result_cards = trips_cards + kickers
+
+            return HandResult(
+                rank=HandRank.THREE_OF_A_KIND,
+                cards=result_cards,
+                rank_name="Three of a Kind"
             )
 
         return None
